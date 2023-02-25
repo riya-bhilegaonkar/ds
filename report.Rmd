@@ -8,7 +8,52 @@ output:
 
 ## Classification Model for Diabetes Risk
 
+```{r, include = FALSE}
+#Load Libraries
+library(chunked)
+library(tidyverse)
+library(caret)
+library(FNN)
+library(doBy)
+library(data.table)
+library(h2o)
+library(gtsummary)
+library(e1071)
+library(mice)
+library(corrplot)
+
+#for reproducibility
+set.seed(4)
+```
+
 # Summary Statistics and Visualizations
+
+```{r, warning=FALSE}
+#Data Preparation
+diabetes_risk <- fread("data/diabetes_risk_data.csv") %>% rename(member_id = 1) %>% mutate(gender = recode(
+    gender,
+    "Male" = 0,
+    "Female" = 1), gluc = na_if(gluc, 0)) %>% mutate(diabetes = as.factor(diabetes), gender = as.factor(gender), cholesterol = as.factor(cholesterol), gluc = as.factor(gluc), smoke = as.factor(smoke), active = as.factor(active), alco = as.factor(alco), age = as.integer(age/365), height = height/2.54, weight = weight*2.20462)
+
+knitr::kable(summary(diabetes_risk[,-1]))
+
+
+```
+
+```{r, include = FALSE}
+# Define arbitrary matrix with TRUE values when data is missing and FALSE otherwise
+A <- is.na(diabetes_risk)
+# Replace all the other columns which are not the one you want to impute (let say column 2)
+A[,-c(8:9)] <- FALSE 
+# Run the mice function
+imputed <- mice(diabetes_risk, where = A)
+imputed <- complete(imputed)
+```
+
+```{r}
+knitr::kable(summary(imputed[,-1]))
+```
+
 
 # Final Model Choice
 

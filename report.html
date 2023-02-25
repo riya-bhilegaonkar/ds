@@ -33,6 +33,7 @@
 <link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
 <script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 <link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
@@ -221,6 +222,9 @@ $(document).ready(function () {
 </style>
 
 <!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
 
 
 
@@ -357,6 +361,14 @@ div.tocify {
 
 <div id="header">
 
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
 
 
 <h1 class="title toc-ignore">Final Report</h1>
@@ -369,6 +381,282 @@ div.tocify {
 </div>
 <div id="summary-statistics-and-visualizations" class="section level1">
 <h1>Summary Statistics and Visualizations</h1>
+<pre class="r"><code>#Data Preparation
+diabetes_risk &lt;- fread(&quot;data/diabetes_risk_data.csv&quot;) %&gt;% rename(member_id = 1) %&gt;% mutate(gender = recode(
+    gender,
+    &quot;Male&quot; = 0,
+    &quot;Female&quot; = 1), gluc = na_if(gluc, 0)) %&gt;% mutate(diabetes = as.factor(diabetes), gender = as.factor(gender), cholesterol = as.factor(cholesterol), gluc = as.factor(gluc), smoke = as.factor(smoke), active = as.factor(active), alco = as.factor(alco), age = as.integer(age/365), height = height/2.54, weight = weight*2.20462)
+
+knitr::kable(summary(diabetes_risk[,-1]))</code></pre>
+<table style="width:100%;">
+<colgroup>
+<col width="1%" />
+<col width="8%" />
+<col width="5%" />
+<col width="8%" />
+<col width="9%" />
+<col width="10%" />
+<col width="10%" />
+<col width="7%" />
+<col width="6%" />
+<col width="5%" />
+<col width="5%" />
+<col width="5%" />
+<col width="5%" />
+<col width="10%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">age</th>
+<th align="left">gender</th>
+<th align="left">height</th>
+<th align="left">weight</th>
+<th align="left">ap_hi</th>
+<th align="left">ap_lo</th>
+<th align="left">cholesterol</th>
+<th align="left">gluc</th>
+<th align="left">smoke</th>
+<th align="left">alco</th>
+<th align="left">active</th>
+<th align="left">diabetes</th>
+<th align="left">bmi</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">Min. :29.00</td>
+<td align="left">0:45530</td>
+<td align="left">Min. :21.65</td>
+<td align="left">Min. : 22.05</td>
+<td align="left">Min. : -150.0</td>
+<td align="left">Min. : -70.00</td>
+<td align="left">1 :47095</td>
+<td align="left">1 :59475</td>
+<td align="left">0:63831</td>
+<td align="left">0:66236</td>
+<td align="left">0:13739</td>
+<td align="left">0:35021</td>
+<td align="left">Min. : 3.472</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">1st Qu.:48.00</td>
+<td align="left">1:24470</td>
+<td align="left">1st Qu.:62.60</td>
+<td align="left">1st Qu.:143.30</td>
+<td align="left">1st Qu.: 120.0</td>
+<td align="left">1st Qu.: 80.00</td>
+<td align="left">2 : 8632</td>
+<td align="left">2 : 5190</td>
+<td align="left">1: 6169</td>
+<td align="left">1: 3764</td>
+<td align="left">1:56261</td>
+<td align="left">1:34979</td>
+<td align="left">1st Qu.: 23.875</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">Median :53.00</td>
+<td align="left">NA</td>
+<td align="left">Median :64.96</td>
+<td align="left">Median :158.73</td>
+<td align="left">Median : 120.0</td>
+<td align="left">Median : 80.00</td>
+<td align="left">3 : 7273</td>
+<td align="left">3 : 5330</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">Median : 26.374</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">Mean :52.84</td>
+<td align="left">NA</td>
+<td align="left">Mean :64.71</td>
+<td align="left">Mean :163.60</td>
+<td align="left">Mean : 128.8</td>
+<td align="left">Mean : 96.63</td>
+<td align="left">NA’s: 7000</td>
+<td align="left">NA’s: 5</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">Mean : 27.557</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">3rd Qu.:58.00</td>
+<td align="left">NA</td>
+<td align="left">3rd Qu.:66.93</td>
+<td align="left">3rd Qu.:180.78</td>
+<td align="left">3rd Qu.: 140.0</td>
+<td align="left">3rd Qu.: 90.00</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">3rd Qu.: 30.222</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">Max. :64.00</td>
+<td align="left">NA</td>
+<td align="left">Max. :98.43</td>
+<td align="left">Max. :440.92</td>
+<td align="left">Max. :16020.0</td>
+<td align="left">Max. :11000.00</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">Max. :298.667</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>knitr::kable(summary(imputed[,-1]))</code></pre>
+<table style="width:100%;">
+<colgroup>
+<col width="1%" />
+<col width="8%" />
+<col width="5%" />
+<col width="8%" />
+<col width="9%" />
+<col width="10%" />
+<col width="10%" />
+<col width="7%" />
+<col width="5%" />
+<col width="5%" />
+<col width="5%" />
+<col width="5%" />
+<col width="5%" />
+<col width="10%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">age</th>
+<th align="left">gender</th>
+<th align="left">height</th>
+<th align="left">weight</th>
+<th align="left">ap_hi</th>
+<th align="left">ap_lo</th>
+<th align="left">cholesterol</th>
+<th align="left">gluc</th>
+<th align="left">smoke</th>
+<th align="left">alco</th>
+<th align="left">active</th>
+<th align="left">diabetes</th>
+<th align="left">bmi</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">Min. :29.00</td>
+<td align="left">0:45530</td>
+<td align="left">Min. :21.65</td>
+<td align="left">Min. : 22.05</td>
+<td align="left">Min. : -150.0</td>
+<td align="left">Min. : -70.00</td>
+<td align="left">1:52353</td>
+<td align="left">1:59478</td>
+<td align="left">0:63831</td>
+<td align="left">0:66236</td>
+<td align="left">0:13739</td>
+<td align="left">0:35021</td>
+<td align="left">Min. : 3.472</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">1st Qu.:48.00</td>
+<td align="left">1:24470</td>
+<td align="left">1st Qu.:62.60</td>
+<td align="left">1st Qu.:143.30</td>
+<td align="left">1st Qu.: 120.0</td>
+<td align="left">1st Qu.: 80.00</td>
+<td align="left">2: 9607</td>
+<td align="left">2: 5191</td>
+<td align="left">1: 6169</td>
+<td align="left">1: 3764</td>
+<td align="left">1:56261</td>
+<td align="left">1:34979</td>
+<td align="left">1st Qu.: 23.875</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">Median :53.00</td>
+<td align="left">NA</td>
+<td align="left">Median :64.96</td>
+<td align="left">Median :158.73</td>
+<td align="left">Median : 120.0</td>
+<td align="left">Median : 80.00</td>
+<td align="left">3: 8040</td>
+<td align="left">3: 5331</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">Median : 26.374</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">Mean :52.84</td>
+<td align="left">NA</td>
+<td align="left">Mean :64.71</td>
+<td align="left">Mean :163.60</td>
+<td align="left">Mean : 128.8</td>
+<td align="left">Mean : 96.63</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">Mean : 27.557</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">3rd Qu.:58.00</td>
+<td align="left">NA</td>
+<td align="left">3rd Qu.:66.93</td>
+<td align="left">3rd Qu.:180.78</td>
+<td align="left">3rd Qu.: 140.0</td>
+<td align="left">3rd Qu.: 90.00</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">3rd Qu.: 30.222</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">Max. :64.00</td>
+<td align="left">NA</td>
+<td align="left">Max. :98.43</td>
+<td align="left">Max. :440.92</td>
+<td align="left">Max. :16020.0</td>
+<td align="left">Max. :11000.00</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">Max. :298.667</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div id="final-model-choice" class="section level1">
 <h1>Final Model Choice</h1>
@@ -421,6 +709,11 @@ $(document).ready(function () {
 </script>
 
 <!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
 
 <script>
 $(document).ready(function ()  {

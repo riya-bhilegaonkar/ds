@@ -33,6 +33,7 @@
 <link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
 <script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 <link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
@@ -221,6 +222,9 @@ $(document).ready(function () {
 </style>
 
 <!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
 
 
 
@@ -357,6 +361,14 @@ div.tocify {
 
 <div id="header">
 
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
 
 
 <h1 class="title toc-ignore">Tested Classification Models</h1>
@@ -444,29 +456,374 @@ library(doBy)</code></pre>
 ##     %*%, %in%, &amp;&amp;, ||, apply, as.factor, as.numeric, colnames,
 ##     colnames&lt;-, ifelse, is.character, is.factor, is.numeric, log,
 ##     log10, log1p, log2, round, signif, trunc</code></pre>
+<pre class="r"><code>library(gtsummary)
+library(e1071)
+library(mice)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;mice&#39;
+## 
+## The following object is masked from &#39;package:stats&#39;:
+## 
+##     filter
+## 
+## The following objects are masked from &#39;package:base&#39;:
+## 
+##     cbind, rbind</code></pre>
+<pre class="r"><code>library(corrplot)</code></pre>
+<pre><code>## corrplot 0.92 loaded</code></pre>
 <pre class="r"><code>#for reproducibility
 set.seed(4)</code></pre>
+<pre class="r"><code>#Data Preparation
+diabetes_risk &lt;- fread(&quot;data/diabetes_risk_data.csv&quot;) %&gt;% rename(member_id = 1) %&gt;% mutate(gender = recode(
+    gender,
+    &quot;Male&quot; = 0,
+    &quot;Female&quot; = 1), gluc = na_if(gluc, 0)) %&gt;% mutate(diabetes = as.factor(diabetes), gender = as.factor(gender), cholesterol = as.factor(cholesterol), gluc = as.factor(gluc), smoke = as.factor(smoke), active = as.factor(active), alco = as.factor(alco), age = as.integer(age/365), height = height/2.54, weight = weight*2.20462)
+
+knitr::kable(summary(diabetes_risk[,-1]))</code></pre>
+<table style="width:100%;">
+<colgroup>
+<col width="1%" />
+<col width="8%" />
+<col width="5%" />
+<col width="8%" />
+<col width="9%" />
+<col width="10%" />
+<col width="10%" />
+<col width="7%" />
+<col width="6%" />
+<col width="5%" />
+<col width="5%" />
+<col width="5%" />
+<col width="5%" />
+<col width="10%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">age</th>
+<th align="left">gender</th>
+<th align="left">height</th>
+<th align="left">weight</th>
+<th align="left">ap_hi</th>
+<th align="left">ap_lo</th>
+<th align="left">cholesterol</th>
+<th align="left">gluc</th>
+<th align="left">smoke</th>
+<th align="left">alco</th>
+<th align="left">active</th>
+<th align="left">diabetes</th>
+<th align="left">bmi</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">Min. :29.00</td>
+<td align="left">0:45530</td>
+<td align="left">Min. :21.65</td>
+<td align="left">Min. : 22.05</td>
+<td align="left">Min. : -150.0</td>
+<td align="left">Min. : -70.00</td>
+<td align="left">1 :47095</td>
+<td align="left">1 :59475</td>
+<td align="left">0:63831</td>
+<td align="left">0:66236</td>
+<td align="left">0:13739</td>
+<td align="left">0:35021</td>
+<td align="left">Min. : 3.472</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">1st Qu.:48.00</td>
+<td align="left">1:24470</td>
+<td align="left">1st Qu.:62.60</td>
+<td align="left">1st Qu.:143.30</td>
+<td align="left">1st Qu.: 120.0</td>
+<td align="left">1st Qu.: 80.00</td>
+<td align="left">2 : 8632</td>
+<td align="left">2 : 5190</td>
+<td align="left">1: 6169</td>
+<td align="left">1: 3764</td>
+<td align="left">1:56261</td>
+<td align="left">1:34979</td>
+<td align="left">1st Qu.: 23.875</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">Median :53.00</td>
+<td align="left">NA</td>
+<td align="left">Median :64.96</td>
+<td align="left">Median :158.73</td>
+<td align="left">Median : 120.0</td>
+<td align="left">Median : 80.00</td>
+<td align="left">3 : 7273</td>
+<td align="left">3 : 5330</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">Median : 26.374</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">Mean :52.84</td>
+<td align="left">NA</td>
+<td align="left">Mean :64.71</td>
+<td align="left">Mean :163.60</td>
+<td align="left">Mean : 128.8</td>
+<td align="left">Mean : 96.63</td>
+<td align="left">NA’s: 7000</td>
+<td align="left">NA’s: 5</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">Mean : 27.557</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">3rd Qu.:58.00</td>
+<td align="left">NA</td>
+<td align="left">3rd Qu.:66.93</td>
+<td align="left">3rd Qu.:180.78</td>
+<td align="left">3rd Qu.: 140.0</td>
+<td align="left">3rd Qu.: 90.00</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">3rd Qu.: 30.222</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">Max. :64.00</td>
+<td align="left">NA</td>
+<td align="left">Max. :98.43</td>
+<td align="left">Max. :440.92</td>
+<td align="left">Max. :16020.0</td>
+<td align="left">Max. :11000.00</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">Max. :298.667</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># Define arbitrary matrix with TRUE values when data is missing and FALSE otherwise
+A &lt;- is.na(diabetes_risk)
+# Replace all the other columns which are not the one you want to impute (let say column 2)
+A[,-c(8:9)] &lt;- FALSE 
+# Run the mice function
+imputed &lt;- mice(diabetes_risk, where = A)</code></pre>
+<pre><code>## 
+##  iter imp variable
+##   1   1  cholesterol  gluc
+##   1   2  cholesterol  gluc
+##   1   3  cholesterol  gluc
+##   1   4  cholesterol  gluc
+##   1   5  cholesterol  gluc
+##   2   1  cholesterol  gluc
+##   2   2  cholesterol  gluc
+##   2   3  cholesterol  gluc
+##   2   4  cholesterol  gluc
+##   2   5  cholesterol  gluc
+##   3   1  cholesterol  gluc
+##   3   2  cholesterol  gluc
+##   3   3  cholesterol  gluc
+##   3   4  cholesterol  gluc
+##   3   5  cholesterol  gluc
+##   4   1  cholesterol  gluc
+##   4   2  cholesterol  gluc
+##   4   3  cholesterol  gluc
+##   4   4  cholesterol  gluc
+##   4   5  cholesterol  gluc
+##   5   1  cholesterol  gluc
+##   5   2  cholesterol  gluc
+##   5   3  cholesterol  gluc
+##   5   4  cholesterol  gluc
+##   5   5  cholesterol  gluc</code></pre>
+<pre><code>## Warning: Number of logged events: 1</code></pre>
+<pre class="r"><code>imputed &lt;- complete(imputed)
+
+knitr::kable(summary(imputed[,-1]))</code></pre>
+<table style="width:100%;">
+<colgroup>
+<col width="1%" />
+<col width="8%" />
+<col width="5%" />
+<col width="8%" />
+<col width="9%" />
+<col width="10%" />
+<col width="10%" />
+<col width="7%" />
+<col width="5%" />
+<col width="5%" />
+<col width="5%" />
+<col width="5%" />
+<col width="5%" />
+<col width="10%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">age</th>
+<th align="left">gender</th>
+<th align="left">height</th>
+<th align="left">weight</th>
+<th align="left">ap_hi</th>
+<th align="left">ap_lo</th>
+<th align="left">cholesterol</th>
+<th align="left">gluc</th>
+<th align="left">smoke</th>
+<th align="left">alco</th>
+<th align="left">active</th>
+<th align="left">diabetes</th>
+<th align="left">bmi</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">Min. :29.00</td>
+<td align="left">0:45530</td>
+<td align="left">Min. :21.65</td>
+<td align="left">Min. : 22.05</td>
+<td align="left">Min. : -150.0</td>
+<td align="left">Min. : -70.00</td>
+<td align="left">1:52353</td>
+<td align="left">1:59478</td>
+<td align="left">0:63831</td>
+<td align="left">0:66236</td>
+<td align="left">0:13739</td>
+<td align="left">0:35021</td>
+<td align="left">Min. : 3.472</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">1st Qu.:48.00</td>
+<td align="left">1:24470</td>
+<td align="left">1st Qu.:62.60</td>
+<td align="left">1st Qu.:143.30</td>
+<td align="left">1st Qu.: 120.0</td>
+<td align="left">1st Qu.: 80.00</td>
+<td align="left">2: 9607</td>
+<td align="left">2: 5191</td>
+<td align="left">1: 6169</td>
+<td align="left">1: 3764</td>
+<td align="left">1:56261</td>
+<td align="left">1:34979</td>
+<td align="left">1st Qu.: 23.875</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">Median :53.00</td>
+<td align="left">NA</td>
+<td align="left">Median :64.96</td>
+<td align="left">Median :158.73</td>
+<td align="left">Median : 120.0</td>
+<td align="left">Median : 80.00</td>
+<td align="left">3: 8040</td>
+<td align="left">3: 5331</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">Median : 26.374</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">Mean :52.84</td>
+<td align="left">NA</td>
+<td align="left">Mean :64.71</td>
+<td align="left">Mean :163.60</td>
+<td align="left">Mean : 128.8</td>
+<td align="left">Mean : 96.63</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">Mean : 27.557</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">3rd Qu.:58.00</td>
+<td align="left">NA</td>
+<td align="left">3rd Qu.:66.93</td>
+<td align="left">3rd Qu.:180.78</td>
+<td align="left">3rd Qu.: 140.0</td>
+<td align="left">3rd Qu.: 90.00</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">3rd Qu.: 30.222</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">Max. :64.00</td>
+<td align="left">NA</td>
+<td align="left">Max. :98.43</td>
+<td align="left">Max. :440.92</td>
+<td align="left">Max. :16020.0</td>
+<td align="left">Max. :11000.00</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">Max. :298.667</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>#Data Partition
+indexTrain &lt;- createDataPartition(y = imputed$diabetes, p = 0.8, list = FALSE)
+trainData &lt;- imputed[indexTrain, ]
+testData &lt;- imputed[-indexTrain, ]
+
+#for model training (remove id variable)
+trainData &lt;- trainData[,-1]
+testData &lt;- testData[-1]
+
+#checking for outliers 
+cooksd &lt;- cooks.distance(glm(diabetes ~ ., 
+                             family = &quot;binomial&quot;, 
+                             data = trainData))</code></pre>
+<pre><code>## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</code></pre>
+<pre class="r"><code>plot(cooksd, 
+     pch=&quot;*&quot;, 
+     cex=2, 
+     main=&quot;Influential Obs by Cooks distance&quot;)  
+abline(h = 4*mean(cooksd, na.rm=T), col=&quot;red&quot;)</code></pre>
+<p><img src="models_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<pre class="r"><code>outliers &lt;- as.data.frame(rownames(trainData[cooksd &gt; 4*mean(cooksd, na.rm=T), ]))
+nrow(outliers)</code></pre>
+<pre><code>## [1] 37</code></pre>
+<pre class="r"><code>#Checking for multicolinearity (#bmi and weight are correlated)
+corrplot(cor(trainData[,c(1,3:6,13)]), method = &quot;circle&quot;, type = &quot;full&quot;)</code></pre>
+<p><img src="models_files/figure-html/unnamed-chunk-2-2.png" width="672" /></p>
 <pre class="r"><code>#for h2o package
 localH2O &lt;- h2o.init(nthreads = -1)</code></pre>
-<pre><code>## 
-## H2O is not running yet, starting it now...
-## 
-## Note:  In case of errors look at the following log files:
-##     C:\Users\RIYABH~1\AppData\Local\Temp\RtmpaOeU4D\file34f0b5e45ce/h2o_Riya_Bhilegaonkar_started_from_r.out
-##     C:\Users\RIYABH~1\AppData\Local\Temp\RtmpaOeU4D\file34f062b8ef/h2o_Riya_Bhilegaonkar_started_from_r.err
-## 
-## 
-## Starting H2O JVM and connecting: . Connection successful!
+<pre><code>##  Connection successful!
 ## 
 ## R is connected to the H2O cluster: 
-##     H2O cluster uptime:         5 seconds 147 milliseconds 
+##     H2O cluster uptime:         2 hours 43 minutes 
 ##     H2O cluster timezone:       America/New_York 
 ##     H2O data parsing timezone:  UTC 
 ##     H2O cluster version:        3.40.0.1 
-##     H2O cluster version age:    16 days 
-##     H2O cluster name:           H2O_started_from_R_Riya_Bhilegaonkar_xks262 
+##     H2O cluster version age:    17 days 
+##     H2O cluster name:           H2O_started_from_R_Riya_Bhilegaonkar_goj840 
 ##     H2O cluster total nodes:    1 
-##     H2O cluster total memory:   1.96 GB 
+##     H2O cluster total memory:   1.88 GB 
 ##     H2O cluster total cores:    4 
 ##     H2O cluster allowed cores:  4 
 ##     H2O cluster healthy:        TRUE 
@@ -475,27 +832,6 @@ localH2O &lt;- h2o.init(nthreads = -1)</code></pre>
 ##     H2O Connection proxy:       NA 
 ##     H2O Internal Security:      FALSE 
 ##     R Version:                  R version 4.2.2 (2022-10-31 ucrt)</code></pre>
-<pre class="r"><code>#Data Preparation
-diabetes_risk &lt;- fread(&quot;data/diabetes_risk_data.csv&quot;) %&gt;% rename(member_id = 1) %&gt;% mutate(gender = recode(
-    gender,
-    &quot;Male&quot; = 0,
-    &quot;Female&quot; = 1)) %&gt;% mutate(diabetes = as.factor(diabetes))
-  
-View(diabetes_risk)
-
-#Data Partition
-indexTrain &lt;- createDataPartition(y = diabetes_risk$diabetes, p = 0.8, list = FALSE)
-trainData &lt;- diabetes_risk[indexTrain, ]
-testData &lt;- diabetes_risk[-indexTrain, ]
-View(trainData)
-
-#for model training
-trainData &lt;- na.omit(trainData)
-testData &lt;- na.omit(testData)
-
-trainData &lt;- trainData[,-1]
-testData &lt;- testData[-1]
-View(trainData)</code></pre>
 <pre class="r"><code>#data as h2o cluster
 train.h2o &lt;- as.h2o(trainData)</code></pre>
 <pre><code>## 
@@ -512,7 +848,7 @@ train.h2o &lt;- as.h2o(trainData)</code></pre>
 <pre class="r"><code>#dependent variable (Purchase)
 y.dep &lt;- 12
 
-#independent variables (dropping ID variables)
+#independent variables 
 x.indep &lt;- c(1:11,13)</code></pre>
 <pre class="r"><code>#Model Training with Random Forest
 rforest.model &lt;- h2o.randomForest(y=y.dep, x=x.indep, training_frame = train.h2o, ntrees = 1000, mtries = 3, max_depth = 4, seed = 4)</code></pre>
@@ -520,58 +856,60 @@ rforest.model &lt;- h2o.randomForest(y=y.dep, x=x.indep, training_frame = train.
   |                                                                            
   |                                                                      |   0%
   |                                                                            
-  |==                                                                    |   2%
+  |==                                                                    |   3%
   |                                                                            
-  |========                                                              |  12%
+  |======                                                                |   9%
   |                                                                            
-  |=====================                                                 |  30%
+  |=================                                                     |  24%
   |                                                                            
-  |=================================                                     |  48%
+  |=============================                                         |  41%
   |                                                                            
-  |==============================================                        |  66%
+  |=========================================                             |  58%
   |                                                                            
-  |============================================================          |  85%
+  |======================================================                |  77%
+  |                                                                            
+  |====================================================================  |  97%
   |                                                                            
   |======================================================================| 100%</code></pre>
 <pre class="r"><code>#Performance Metrics
 h2o.performance(rforest.model, newdata = test.h2o)</code></pre>
 <pre><code>## H2OBinomialMetrics: drf
 ## 
-## MSE:  0.1940001
-## RMSE:  0.4404544
-## LogLoss:  0.5751736
-## Mean Per-Class Error:  0.3063142
-## AUC:  0.7843129
-## AUCPR:  0.7662656
-## Gini:  0.5686258
-## R^2:  0.2239959
+## MSE:  0.1953843
+## RMSE:  0.442023
+## LogLoss:  0.5784142
+## Mean Per-Class Error:  0.297788
+## AUC:  0.7845024
+## AUCPR:  0.7623444
+## Gini:  0.5690048
+## R^2:  0.2184625
 ## 
 ## Confusion Matrix (vertical: actual; across: predicted) for F1-optimal threshold:
 ##           0    1    Error         Rate
-## 0      3508 2762 0.440510   =2762/6270
-## 1      1084 5214 0.172118   =1084/6298
-## Totals 4592 7976 0.306015  =3846/12568
+## 0      3933 3071 0.438464   =3071/7004
+## 1      1099 5896 0.157112   =1099/6995
+## Totals 5032 8967 0.297878  =4170/13999
 ## 
 ## Maximum Metrics: Maximum metrics at their respective thresholds
 ##                         metric threshold       value idx
-## 1                       max f1  0.410919    0.730559 263
-## 2                       max f2  0.285087    0.840211 363
-## 3                 max f0point5  0.555225    0.746822 164
-## 4                 max accuracy  0.515528    0.721595 184
-## 5                max precision  0.800100    0.871901  12
-## 6                   max recall  0.231044    1.000000 393
-## 7              max specificity  0.830560    0.999681   0
-## 8             max absolute_mcc  0.543941    0.457278 170
-## 9   max min_per_class_accuracy  0.455981    0.716259 225
-## 10 max mean_per_class_accuracy  0.515528    0.721816 184
-## 11                     max tns  0.830560 6268.000000   0
-## 12                     max fns  0.830560 6296.000000   0
-## 13                     max fps  0.211587 6270.000000 399
-## 14                     max tps  0.231044 6298.000000 393
-## 15                     max tnr  0.830560    0.999681   0
-## 16                     max fnr  0.830560    0.999682   0
-## 17                     max fpr  0.211587    1.000000 399
-## 18                     max tpr  0.231044    1.000000 393
+## 1                       max f1  0.415623    0.738755 264
+## 2                       max f2  0.248995    0.838435 377
+## 3                 max f0point5  0.555928    0.734876 162
+## 4                 max accuracy  0.493850    0.724409 202
+## 5                max precision  0.822022    1.000000   0
+## 6                   max recall  0.211415    1.000000 398
+## 7              max specificity  0.822022    1.000000   0
+## 8             max absolute_mcc  0.500569    0.449756 197
+## 9   max min_per_class_accuracy  0.473807    0.720588 216
+## 10 max mean_per_class_accuracy  0.493850    0.724388 202
+## 11                     max tns  0.822022 7004.000000   0
+## 12                     max fns  0.822022 6993.000000   0
+## 13                     max fps  0.209921 7004.000000 399
+## 14                     max tps  0.211415 6995.000000 398
+## 15                     max tnr  0.822022    1.000000   0
+## 16                     max fnr  0.822022    0.999714   0
+## 17                     max fpr  0.209921    1.000000 399
+## 18                     max tpr  0.211415    1.000000 398
 ## 
 ## Gains/Lift Table: Extract with `h2o.gainsLift(&lt;model&gt;, &lt;data&gt;)` or `h2o.gainsLift(&lt;model&gt;, valid=&lt;T/F&gt;, xval=&lt;T/F&gt;)`</code></pre>
 <pre class="r"><code>#Model Training with Logistic Regression
@@ -587,54 +925,66 @@ logit.model &lt;- h2o.glm( x = x.indep,
   |                                                                            
   |                                                                      |   0%
   |                                                                            
-  |==                                                                    |   2%
+  |=======                                                               |  10%
   |                                                                            
-  |===========                                                           |  16%
-  |                                                                            
-  |======================                                                |  32%
+  |====================                                                  |  28%
   |                                                                            
   |======================================================================| 100%</code></pre>
+<pre><code>## Warning in doTryCatch(return(expr), name, parentenv, handler): Reached maximum
+## number of iterations 58!</code></pre>
+<pre class="r"><code>#Model Coefficients
+h2o.coef(logit.model)</code></pre>
+<pre><code>##     Intercept cholesterol.1 cholesterol.2 cholesterol.3        gluc.1 
+##  -4.748745837  -0.415007284   0.000000000   0.238054342   0.000000000 
+##        gluc.2        gluc.3      gender.0      gender.1       smoke.0 
+##   0.000000000   0.000000000   0.000000000   0.000000000   0.000000000 
+##       smoke.1        alco.0        alco.1      active.0      active.1 
+##   0.000000000   0.000000000   0.000000000   0.000000000   0.000000000 
+##           age        height        weight         ap_hi         ap_lo 
+##   0.058313252   0.000000000   0.007083654   0.002643915   0.000657690 
+##           bmi 
+##   0.014376587</code></pre>
 <pre class="r"><code>#Performance Metrics
 h2o.performance(logit.model, newdata = test.h2o)</code></pre>
 <pre><code>## H2OBinomialMetrics: glm
 ## 
-## MSE:  0.2190772
-## RMSE:  0.4680569
-## LogLoss:  0.6284956
-## Mean Per-Class Error:  0.3998093
-## AUC:  0.7047073
-## AUCPR:  0.6875189
-## Gini:  0.4094147
-## R^2:  0.1236867
-## Residual Deviance:  15797.87
-## AIC:  15815.87
+## MSE:  0.2179577
+## RMSE:  0.4668594
+## LogLoss:  0.6263266
+## Mean Per-Class Error:  0.3929111
+## AUC:  0.7112962
+## AUCPR:  0.6944136
+## Gini:  0.4225925
+## R^2:  0.128169
+## Residual Deviance:  17535.89
+## AIC:  17551.89
 ## 
 ## Confusion Matrix (vertical: actual; across: predicted) for F1-optimal threshold:
 ##           0     1    Error         Rate
-## 0      1792  4478 0.714195   =4478/6270
-## 1       538  5760 0.085424    =538/6298
-## Totals 2330 10238 0.399109  =5016/12568
+## 0      2200  4804 0.685894   =4804/7004
+## 1       699  6296 0.099929    =699/6995
+## Totals 2899 11100 0.393100  =5503/13999
 ## 
 ## Maximum Metrics: Maximum metrics at their respective thresholds
 ##                         metric threshold       value idx
-## 1                       max f1  0.352584    0.696662 311
-## 2                       max f2  0.270008    0.837004 359
-## 3                 max f0point5  0.493630    0.651020 211
-## 4                 max accuracy  0.493630    0.649745 211
-## 5                max precision  0.809695    0.838428  37
-## 6                   max recall  0.194500    1.000000 390
-## 7              max specificity  0.990541    0.999841   0
-## 8             max absolute_mcc  0.493630    0.299610 211
-## 9   max min_per_class_accuracy  0.489150    0.647348 214
-## 10 max mean_per_class_accuracy  0.493630    0.649770 211
-## 11                     max tns  0.990541 6269.000000   0
-## 12                     max fns  0.990541 6297.000000   0
-## 13                     max fps  0.134587 6270.000000 399
-## 14                     max tps  0.194500 6298.000000 390
-## 15                     max tnr  0.990541    0.999841   0
-## 16                     max fnr  0.990541    0.999841   0
-## 17                     max fpr  0.134587    1.000000 399
-## 18                     max tpr  0.194500    1.000000 390
+## 1                       max f1  0.371152    0.695883 301
+## 2                       max f2  0.259952    0.835526 367
+## 3                 max f0point5  0.505667    0.655380 205
+## 4                 max accuracy  0.500448    0.654332 209
+## 5                max precision  0.926909    0.882353   6
+## 6                   max recall  0.164085    1.000000 398
+## 7              max specificity  0.993293    0.999714   0
+## 8             max absolute_mcc  0.505667    0.308967 205
+## 9   max min_per_class_accuracy  0.495536    0.652323 213
+## 10 max mean_per_class_accuracy  0.500448    0.654323 209
+## 11                     max tns  0.993293 7002.000000   0
+## 12                     max fns  0.993293 6994.000000   0
+## 13                     max fps  0.148663 7004.000000 399
+## 14                     max tps  0.164085 6995.000000 398
+## 15                     max tnr  0.993293    0.999714   0
+## 16                     max fnr  0.993293    0.999857   0
+## 17                     max fpr  0.148663    1.000000 399
+## 18                     max tpr  0.164085    1.000000 398
 ## 
 ## Gains/Lift Table: Extract with `h2o.gainsLift(&lt;model&gt;, &lt;data&gt;)` or `h2o.gainsLift(&lt;model&gt;, valid=&lt;T/F&gt;, xval=&lt;T/F&gt;)`</code></pre>
 <pre class="r"><code>#Model Training with Naive Bayes
@@ -648,58 +998,103 @@ naive.h2o &lt;- h2o.naiveBayes(x = x.indep,
   |                                                                            
   |                                                                      |   0%
   |                                                                            
-  |=============================================                         |  64%
+  |====================================================================  |  97%
   |                                                                            
   |======================================================================| 100%</code></pre>
 <pre class="r"><code>#Performance Metrics
 h2o.performance(naive.h2o, newdata = test.h2o)</code></pre>
 <pre><code>## H2OBinomialMetrics: naivebayes
 ## 
-## MSE:  0.2946322
-## RMSE:  0.5428003
-## LogLoss:  0.9334905
-## Mean Per-Class Error:  0.4075176
-## AUC:  0.6851613
-## AUCPR:  0.6637724
-## Gini:  0.3703226
+## MSE:  0.2725493
+## RMSE:  0.5220626
+## LogLoss:  0.8067433
+## Mean Per-Class Error:  0.3804435
+## AUC:  0.6952551
+## AUCPR:  0.6729915
+## Gini:  0.3905103
 ## 
 ## Confusion Matrix (vertical: actual; across: predicted) for F1-optimal threshold:
 ##           0     1    Error         Rate
-## 0      1771  4499 0.717544   =4499/6270
-## 1       614  5684 0.097491    =614/6298
-## Totals 2385 10183 0.406827  =5113/12568
+## 0      2650  4354 0.621645   =4354/7004
+## 1       974  6021 0.139242    =974/6995
+## Totals 3624 10375 0.380599  =5328/13999
 ## 
 ## Maximum Metrics: Maximum metrics at their respective thresholds
 ##                         metric threshold       value idx
-## 1                       max f1  0.077930    0.689764 352
-## 2                       max f2  0.033060    0.834606 386
-## 3                 max f0point5  0.196884    0.634485 267
-## 4                 max accuracy  0.196884    0.632798 267
-## 5                max precision  0.996766    0.790356   3
+## 1                       max f1  0.134947    0.693264 334
+## 2                       max f2  0.052042    0.834277 388
+## 3                 max f0point5  0.217059    0.642352 274
+## 4                 max accuracy  0.200870    0.643617 285
+## 5                max precision  0.999899    0.837004   0
 ## 6                   max recall  0.000000    1.000000 399
-## 7              max specificity  0.999782    0.992663   0
-## 8             max absolute_mcc  0.131707    0.269246 308
-## 9   max min_per_class_accuracy  0.169320    0.629883 284
-## 10 max mean_per_class_accuracy  0.196884    0.632924 267
-## 11                     max tns  0.999782 6224.000000   0
-## 12                     max fns  0.999782 6145.000000   0
-## 13                     max fps  0.000000 6270.000000 399
-## 14                     max tps  0.000000 6298.000000 399
-## 15                     max tnr  0.999782    0.992663   0
-## 16                     max fnr  0.999782    0.975707   0
+## 7              max specificity  0.999899    0.994717   0
+## 8             max absolute_mcc  0.171665    0.289427 308
+## 9   max min_per_class_accuracy  0.218421    0.642459 273
+## 10 max mean_per_class_accuracy  0.200870    0.643647 285
+## 11                     max tns  0.999899 6967.000000   0
+## 12                     max fns  0.999899 6805.000000   0
+## 13                     max fps  0.000000 7004.000000 399
+## 14                     max tps  0.000000 6995.000000 399
+## 15                     max tnr  0.999899    0.994717   0
+## 16                     max fnr  0.999899    0.972838   0
 ## 17                     max fpr  0.000000    1.000000 399
 ## 18                     max tpr  0.000000    1.000000 399
 ## 
 ## Gains/Lift Table: Extract with `h2o.gainsLift(&lt;model&gt;, &lt;data&gt;)` or `h2o.gainsLift(&lt;model&gt;, valid=&lt;T/F&gt;, xval=&lt;T/F&gt;)`</code></pre>
-<pre class="r"><code>#Model Training with SVM
-#svm_model &lt;- h2o.psvm(gamma = 0.01,
-                     # rank_ratio = 0.1,
-                     # y = y.dep,
-                     # training_frame = train.h2o,
-                     # disable_training_metrics = FALSE)
-
-# Eval performance:
-#h2o.performance(svm_model, newdata = test.h2o)</code></pre>
+<pre class="r"><code>tree.model = h2o.gbm(x = x.indep, 
+                     y = y.dep, 
+                        training_frame = train.h2o,
+                        ntrees = 1, min_rows = 1, 
+                        sample_rate = 1,            
+                        col_sample_rate = 1,
+                        max_depth = 5,
+                        seed = 4)</code></pre>
+<pre><code>## 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</code></pre>
+<pre class="r"><code>#Performance Metrics
+h2o.performance(tree.model, newdata = test.h2o)</code></pre>
+<pre><code>## H2OBinomialMetrics: gbm
+## 
+## MSE:  0.2380978
+## RMSE:  0.4879526
+## LogLoss:  0.669314
+## Mean Per-Class Error:  0.2895188
+## AUC:  0.7822821
+## AUCPR:  0.7636901
+## Gini:  0.5645642
+## R^2:  0.04760856
+## 
+## Confusion Matrix (vertical: actual; across: predicted) for F1-optimal threshold:
+##           0    1    Error         Rate
+## 0      4178 2826 0.403484   =2826/7004
+## 1      1228 5767 0.175554   =1228/6995
+## Totals 5406 8593 0.289592  =4054/13999
+## 
+## Maximum Metrics: Maximum metrics at their respective thresholds
+##                         metric threshold       value idx
+## 1                       max f1  0.489672    0.739928  25
+## 2                       max f2  0.472442    0.837641  29
+## 3                 max f0point5  0.503581    0.737518  22
+## 4                 max accuracy  0.503581    0.729624  22
+## 5                max precision  0.536315    0.873437   2
+## 6                   max recall  0.462130    1.000000  30
+## 7              max specificity  0.536994    0.997287   0
+## 8             max absolute_mcc  0.503581    0.461070  22
+## 9   max min_per_class_accuracy  0.500121    0.725804  23
+## 10 max mean_per_class_accuracy  0.503581    0.729595  22
+## 11                     max tns  0.536994 6985.000000   0
+## 12                     max fns  0.536994 6896.000000   0
+## 13                     max fps  0.462130 7004.000000  30
+## 14                     max tps  0.462130 6995.000000  30
+## 15                     max tnr  0.536994    0.997287   0
+## 16                     max fnr  0.536994    0.985847   0
+## 17                     max fpr  0.462130    1.000000  30
+## 18                     max tpr  0.462130    1.000000  30
+## 
+## Gains/Lift Table: Extract with `h2o.gainsLift(&lt;model&gt;, &lt;data&gt;)` or `h2o.gainsLift(&lt;model&gt;, valid=&lt;T/F&gt;, xval=&lt;T/F&gt;)`</code></pre>
 
 
 
@@ -736,6 +1131,11 @@ $(document).ready(function () {
 </script>
 
 <!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
 
 <script>
 $(document).ready(function ()  {

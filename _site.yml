@@ -17,4 +17,5 @@ navbar:
       href: https://www.linkedin.com/in/riya-bhilegaonkar/
 output:
   html_document:
-    theme: journal
+     code_folding: hide
+     theme: journal
