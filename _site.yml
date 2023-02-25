@@ -1,0 +1,20 @@
+name: "Healthfirst Technical Prompt"
+output_dir: "."
+navbar:
+  title: "Home"
+  right:
+    - text: "Final Model"
+      href: report.html
+    - text: "Tested Classification Models"
+      href: models.html
+    - text: "Business Impact"
+      href: impact.html
+    - icon: fa-envelope fa-lg
+      href: mailto:<rsb2204@cumc.columbia.edu>
+    - icon: fa-github fa-lg
+      href: http://github.com/riya-bhilegaonkar/
+    - icon: fa-brands fa-linkedin
+      href: https://www.linkedin.com/in/riya-bhilegaonkar/
+output:
+  html_document:
+    theme: journal
