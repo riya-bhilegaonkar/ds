@@ -15,6 +15,7 @@ library(FNN)
 library(doBy)
 library(data.table)
 library(h2o)
+library(gtsummary)
 
 #for reproducibility
 set.seed(4)
@@ -25,7 +26,9 @@ set.seed(4)
 diabetes_risk <- fread("data/diabetes_risk_data.csv") %>% rename(member_id = 1) %>% mutate(gender = recode(
     gender,
     "Male" = 0,
-    "Female" = 1)) %>% mutate(diabetes = as.factor(diabetes))
+    "Female" = 1)) %>% mutate(diabetes = as.factor(diabetes), gender = as.factor(gender))
+
+knitr::kable(summary(diabetes_risk[,-1]))
 
 #Data Partition
 indexTrain <- createDataPartition(y = diabetes_risk$diabetes, p = 0.8, list = FALSE)
@@ -75,6 +78,9 @@ logit.model <- h2o.glm( x = x.indep,
                                alpha = 0.5, 
                                nfolds = 5 )
 
+#Model Coefficients
+h2o.coef(logit.model)
+
 #Performance Metrics
 h2o.performance(logit.model, newdata = test.h2o)
 ```
@@ -95,12 +101,27 @@ h2o.performance(naive.h2o, newdata = test.h2o)
 
 ```{r}
 #Model Training with SVM
-#svm_model <- h2o.psvm(gamma = 0.01,
-#                      rank_ratio = 0.1,
-    #                  y = y.dep,
-   #                   training_frame = train.h2o,
-   #                   disable_training_metrics = FALSE)
+svm_model <- h2o.psvm(x = x.indep,
+                     y = y.dep,
+                    training_frame = train.h2o,
+                     disable_training_metrics = FALSE)
 
 # Eval performance:
 #h2o.performance(svm_model, newdata = test.h2o)
 ```
+
+```{r}
+tree.model = h2o.gbm(x = x.indep, 
+                     y = y.dep, 
+                        training_frame = train.h2o,
+                        ntrees = 1, min_rows = 1, 
+                        sample_rate = 1,            
+                        col_sample_rate = 1,
+                        max_depth = 5,
+                        seed = 4)
+
+
+#Performance Metrics
+h2o.performance(tree.model, newdata = test.h2o)
+```
+
