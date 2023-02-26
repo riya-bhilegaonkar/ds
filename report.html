@@ -331,7 +331,7 @@ div.tocify {
   <a href="report.html">Final Model</a>
 </li>
 <li>
-  <a href="models.html">Tested Classification Models</a>
+  <a href="models.html">Code: Tested Classification Models</a>
 </li>
 <li>
   <a href="impact.html">Business Impact</a>
@@ -539,24 +539,60 @@ diabetes_risk &lt;- fread(&quot;data/diabetes_risk_data.csv&quot;) %&gt;% rename
 </tr>
 </tbody>
 </table>
-<p>Upon viewing additional summary statistics I noticed two more
-problems that were some missing values in the gluc variable and there
-were certain values coded with a 0. To combat the 0 values as it was not
-listed as a factor in the data dictionary, I recoded the 0 values form
-the gluc column to missing values. Then to fix the issue of missing
-values, I used the mice package to impute values with plausible data
-values drawn from distributions. This method was used as there were over
-7000 missing values which is a large amount.</p>
+<pre class="r"><code>par(mfrow=c(3,2))
+hist(diabetes_risk$age, main = &quot;Histogram of Age&quot;, xlab = &quot;Age&quot;, freq = FALSE)
+hist(diabetes_risk$weight, main = &quot;Histogram of Weight&quot;, xlab = &quot;Weight&quot;, freq = FALSE)
+hist(diabetes_risk$height, main = &quot;Histogram of Height&quot;, xlab = &quot;Height&quot;, freq = FALSE)
+hist(diabetes_risk$ap_hi, main = &quot;Histogram of Systolic BP&quot;, xlab = &quot;Systolic BP&quot;, freq = FALSE)
+hist(diabetes_risk$ap_lo, main = &quot;Histogram of Diastolic BP&quot;, xlab = &quot;Diastolic BP&quot;, freq = FALSE)
+
+diabetes_risk &lt;- diabetes_risk %&gt;% mutate(ap_hi = replace(ap_hi, ap_hi&gt;360, NA), ap_lo = replace(ap_lo, ap_lo&gt;360, NA), ap_hi = replace(ap_hi, ap_hi&lt;0, NA), ap_lo = replace(ap_lo, ap_lo&lt;0, NA))
+summary(diabetes_risk)</code></pre>
+<pre><code>##   member_id              age        gender        height          weight      
+##  Length:70000       Min.   :29.00   0:45530   Min.   :21.65   Min.   : 22.05  
+##  Class :character   1st Qu.:48.00   1:24470   1st Qu.:62.60   1st Qu.:143.30  
+##  Mode  :character   Median :53.00             Median :64.96   Median :158.73  
+##                     Mean   :52.84             Mean   :64.71   Mean   :163.60  
+##                     3rd Qu.:58.00             3rd Qu.:66.93   3rd Qu.:180.78  
+##                     Max.   :64.00             Max.   :98.43   Max.   :440.92  
+##                                                                               
+##      ap_hi           ap_lo        cholesterol    gluc       smoke     alco     
+##  Min.   :  1.0   Min.   :  0.00   1   :47095   1   :59475   0:63831   0:66236  
+##  1st Qu.:120.0   1st Qu.: 80.00   2   : 8632   2   : 5190   1: 6169   1: 3764  
+##  Median :120.0   Median : 80.00   3   : 7273   3   : 5330                      
+##  Mean   :126.7   Mean   : 81.33   NA&#39;s: 7000   NA&#39;s:    5                      
+##  3rd Qu.:140.0   3rd Qu.: 90.00                                                
+##  Max.   :309.0   Max.   :190.00                                                
+##  NA&#39;s   :46      NA&#39;s   :954                                                   
+##  active    diabetes       bmi         
+##  0:13739   0:35021   Min.   :  3.472  
+##  1:56261   1:34979   1st Qu.: 23.875  
+##                      Median : 26.374  
+##                      Mean   : 27.557  
+##                      3rd Qu.: 30.222  
+##                      Max.   :298.667  
+## </code></pre>
+<p><img src="report_files/figure-html/unnamed-chunk-3-1.png" width="672" />
+Upon viewing additional summary statistics I noticed more problems that
+were some missing values in the gluc variable and there were certain
+values coded with a 0. Additionally there were extremely high and low
+values for systolic and diastolic blood pressure, which I recoded as
+missing values. To combat the 0 values as it was not listed as a factor
+in the data dictionary, I recoded the 0 values form the gluc column to
+missing values.Then to fix the issue of missing values, I used the mice
+package to impute values with plausible data values drawn from
+distributions. This method was used as there were over 7000 missing
+values which is a large amount (these would be outlier values).</p>
 <pre class="r"><code>knitr::kable(summary(imputed[,-1]))</code></pre>
 <table style="width:100%;">
 <colgroup>
 <col width="1%" />
-<col width="8%" />
-<col width="5%" />
-<col width="8%" />
 <col width="9%" />
-<col width="10%" />
-<col width="10%" />
+<col width="5%" />
+<col width="9%" />
+<col width="9%" />
+<col width="9%" />
+<col width="9%" />
 <col width="7%" />
 <col width="5%" />
 <col width="5%" />
@@ -590,9 +626,9 @@ values drawn from distributions. This method was used as there were over
 <td align="left">0:45530</td>
 <td align="left">Min. :21.65</td>
 <td align="left">Min. : 22.05</td>
-<td align="left">Min. : -150.0</td>
-<td align="left">Min. : -70.00</td>
-<td align="left">1:52353</td>
+<td align="left">Min. : 1.0</td>
+<td align="left">Min. : 0.00</td>
+<td align="left">1:52362</td>
 <td align="left">1:59478</td>
 <td align="left">0:63831</td>
 <td align="left">0:66236</td>
@@ -606,9 +642,9 @@ values drawn from distributions. This method was used as there were over
 <td align="left">1:24470</td>
 <td align="left">1st Qu.:62.60</td>
 <td align="left">1st Qu.:143.30</td>
-<td align="left">1st Qu.: 120.0</td>
+<td align="left">1st Qu.:120.0</td>
 <td align="left">1st Qu.: 80.00</td>
-<td align="left">2: 9607</td>
+<td align="left">2: 9597</td>
 <td align="left">2: 5191</td>
 <td align="left">1: 6169</td>
 <td align="left">1: 3764</td>
@@ -622,9 +658,9 @@ values drawn from distributions. This method was used as there were over
 <td align="left">NA</td>
 <td align="left">Median :64.96</td>
 <td align="left">Median :158.73</td>
-<td align="left">Median : 120.0</td>
+<td align="left">Median :120.0</td>
 <td align="left">Median : 80.00</td>
-<td align="left">3: 8040</td>
+<td align="left">3: 8041</td>
 <td align="left">3: 5331</td>
 <td align="left">NA</td>
 <td align="left">NA</td>
@@ -638,8 +674,8 @@ values drawn from distributions. This method was used as there were over
 <td align="left">NA</td>
 <td align="left">Mean :64.71</td>
 <td align="left">Mean :163.60</td>
-<td align="left">Mean : 128.8</td>
-<td align="left">Mean : 96.63</td>
+<td align="left">Mean :126.7</td>
+<td align="left">Mean : 81.47</td>
 <td align="left">NA</td>
 <td align="left">NA</td>
 <td align="left">NA</td>
@@ -654,7 +690,7 @@ values drawn from distributions. This method was used as there were over
 <td align="left">NA</td>
 <td align="left">3rd Qu.:66.93</td>
 <td align="left">3rd Qu.:180.78</td>
-<td align="left">3rd Qu.: 140.0</td>
+<td align="left">3rd Qu.:140.0</td>
 <td align="left">3rd Qu.: 90.00</td>
 <td align="left">NA</td>
 <td align="left">NA</td>
@@ -670,8 +706,8 @@ values drawn from distributions. This method was used as there were over
 <td align="left">NA</td>
 <td align="left">Max. :98.43</td>
 <td align="left">Max. :440.92</td>
-<td align="left">Max. :16020.0</td>
-<td align="left">Max. :11000.00</td>
+<td align="left">Max. :309.0</td>
+<td align="left">Max. :190.00</td>
 <td align="left">NA</td>
 <td align="left">NA</td>
 <td align="left">NA</td>
@@ -682,6 +718,13 @@ values drawn from distributions. This method was used as there were over
 </tr>
 </tbody>
 </table>
+<pre class="r"><code>par(mfrow=c(3,2))
+hist(imputed$age, main = &quot;Histogram of Age&quot;, xlab = &quot;Age&quot;, freq = FALSE)
+hist(imputed$weight, main = &quot;Histogram of Weight&quot;, xlab = &quot;Weight&quot;, freq = FALSE)
+hist(imputed$height, main = &quot;Histogram of Height&quot;, xlab = &quot;Height&quot;, freq = FALSE)
+hist(imputed$ap_hi, main = &quot;Histogram of Systolic BP&quot;, xlab = &quot;Systolic BP&quot;, freq = FALSE)
+hist(imputed$ap_lo, main = &quot;Histogram of Diastolic BP&quot;, xlab = &quot;Diastolic BP&quot;, freq = FALSE)</code></pre>
+<p><img src="report_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
 <p>From the summary statistics of the imputed dataset, there are no
 longer any missing values.</p>
 <pre class="r"><code>#Data Partition
@@ -693,30 +736,13 @@ testData &lt;- imputed[-indexTrain, ]
 trainData &lt;- trainData[,-1]
 testData &lt;- testData[-1]
 
-#checking for outliers 
-cooksd &lt;- cooks.distance(glm(diabetes ~ ., 
-                             family = &quot;binomial&quot;, 
-                             data = trainData))</code></pre>
-<pre><code>## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</code></pre>
-<pre class="r"><code>plot(cooksd, 
-     pch=&quot;*&quot;, 
-     cex=2, 
-     main=&quot;Influential Obs by Cooks distance&quot;)  
-abline(h = 4*mean(cooksd, na.rm=T), col=&quot;red&quot;)</code></pre>
-<p><img src="report_files/figure-html/include-1.png" width="672" /></p>
-<pre class="r"><code>outliers &lt;- as.data.frame(rownames(trainData[cooksd &gt; 4*mean(cooksd, na.rm=T), ]))
-nrow(outliers)</code></pre>
-<pre><code>## [1] 37</code></pre>
-<pre class="r"><code>#Checking for multicolinearity (#bmi and weight are correlated)
+#Checking for multicolinearity (#bmi and weight are correlated)
 corrplot(cor(trainData[,c(1,3:6,13)]), method = &quot;circle&quot;, type = &quot;full&quot;)</code></pre>
-<p><img src="report_files/figure-html/include-2.png" width="672" /></p>
-<p>Lastly the data set was checked for outliers, as there were only
-found to be 37 outliers, it was not a significant number to be removed
-for analysis. In terms of checking for multicolineary, bmi and weight
-were highly positively correlated (0.8). Due to this reason I decided to
-remove the bmi variable from the predictor susbset (after testing models
-and seeing improvements in performance metrics with a smaller
-subset).</p>
+<p><img src="report_files/figure-html/include-1.png" width="672" /></p>
+<p>In terms of checking for multicolineary, bmi and weight were highly
+positively correlated (0.8). Due to this reason I decided to remove the
+bmi variable from the predictor susbset (after testing models and seeing
+improvements in performance metrics with a smaller subset).</p>
 </div>
 <div id="final-model-choice" class="section level3">
 <h3>Final Model Choice</h3>
@@ -781,7 +807,7 @@ before it is used.</p>
 <tr class="even">
 <td>Accuracy</td>
 <td>0.6069</td>
-<td>0.7271</td>
+<td>0.7330</td>
 <td>0.7068</td>
 <td>0.6194</td>
 <td>0.7104</td>
@@ -791,24 +817,38 @@ before it is used.</p>
 </div>
 <div id="key-factors-for-model-predictions" class="section level3">
 <h3>Key Factors for Model Predictions</h3>
-<p>Advantages: * Generally more accurate compare to other modes, * Train
-faster especially on larger datasets, * Most of them provide support
-handling categorical features, * Some of them handle missing values
-natively. * Gradient boosting trees can be more accurate than random
-forests. Because we train them to correct each other’s errors, they’re
-capable of capturing complex patterns in the data.</p>
+<p>Advantages:</p>
+<ul>
+<li>Generally more accurate compare to other modes,</li>
+<li>Train faster especially on larger datasets,</li>
+<li>Most of them provide support handling categorical features,</li>
+<li>Some of them handle missing values natively.</li>
+<li>Gradient boosting trees can be more accurate than random forests.
+Because we train them to correct each other’s errors, they’re capable of
+capturing complex patterns in the data.</li>
+</ul>
 </div>
 <div id="limitations-of-model" class="section level3">
 <h3>Limitations of Model</h3>
-<p>Disadvantages: * Prone to overfitting: this can be solved by applying
-L1 and L2 regularization penalties. You can try a low learning rate as
-well; * Models can be computationally expensive and take a long time to
-train, especially on CPUs; * Difficult to interpret the final models. *
-It is difficult to scale this algorithm as every estimator is dependent
-on its predecessor.</p>
+<p>Disadvantages:</p>
+<ul>
+<li>Prone to overfitting, due to sensitivity to outliers.</li>
+<li>Models can be computationally expensive and take a long time to
+train.</li>
+<li>Difficult to interpret the final models.</li>
+<li>It is difficult to scale this algorithm as every estimator is
+dependent on its predecessor.</li>
+</ul>
 </div>
 <div id="further-steps" class="section level3">
 <h3>Further Steps</h3>
+<p>If I had more time to work on the problem: * I would spend more time
+on pre-processing the data, including additional time on outlier
+analysis. There were numerous data entry errors that could be more
+thoroughly combed through. * I would test additional machine learning
+alogirthms such as K-Nearest neighbours, Linear Discriminant Analysis
+and Quadratic Discriminant Analysis. Possibly using principle component
+analysis to choose better subsets of variables.</p>
 </div>
 </div>
 

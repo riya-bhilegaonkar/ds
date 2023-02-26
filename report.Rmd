@@ -46,14 +46,22 @@ diabetes_risk <- fread("data/diabetes_risk_data.csv") %>% rename(member_id = 1) 
 ### Summary Statistics and Visualizations
 ```{r}
 knitr::kable(summary(diabetes_risk[,-1]))
+par(mfrow=c(3,2))
+hist(diabetes_risk$age, main = "Histogram of Age", xlab = "Age", freq = FALSE)
+hist(diabetes_risk$weight, main = "Histogram of Weight", xlab = "Weight", freq = FALSE)
+hist(diabetes_risk$height, main = "Histogram of Height", xlab = "Height", freq = FALSE)
+hist(diabetes_risk$ap_hi, main = "Histogram of Systolic BP", xlab = "Systolic BP", freq = FALSE)
+hist(diabetes_risk$ap_lo, main = "Histogram of Diastolic BP", xlab = "Diastolic BP", freq = FALSE)
+
+diabetes_risk <- diabetes_risk %>% mutate(ap_hi = replace(ap_hi, ap_hi>360, NA), ap_lo = replace(ap_lo, ap_lo>360, NA), ap_hi = replace(ap_hi, ap_hi<0, NA), ap_lo = replace(ap_lo, ap_lo<0, NA))
 ```
-Upon viewing additional summary statistics I noticed two more problems that were some missing values in the gluc variable and there were certain values coded with a 0. To combat the 0 values as it was not listed as a factor in the data dictionary, I recoded the 0 values form the gluc column to missing values.
-Then to fix the issue of missing values, I used the mice package to impute values with plausible data values drawn from distributions. This method was used as there were over 7000 missing values which is a large amount. 
+Upon viewing additional summary statistics I noticed more problems that were some missing values in the gluc variable and there were certain values coded with a 0. Additionally there were extremely high and low values for systolic and diastolic blood pressure, which I recoded as missing values. To combat the 0 values as it was not listed as a factor in the data dictionary, I recoded the 0 values form the gluc column to missing values.Then to fix the issue of missing values, I used the mice package to impute values with plausible data values drawn from distributions. This method was used as there were over 7000 missing values which is a large amount (these would be outlier values).
+
 ```{r, include = FALSE}
 # Define arbitrary matrix with TRUE values when data is missing and FALSE otherwise
 A <- is.na(diabetes_risk)
 # Replace all the other columns which are not the one you want to impute (let say column 2)
-A[,-c(8:9)] <- FALSE 
+A[,-c(6:9)] <- FALSE 
 # Run the mice function
 imputed <- mice(diabetes_risk, where = A)
 imputed <- complete(imputed)
@@ -61,7 +69,15 @@ imputed <- complete(imputed)
 
 ```{r}
 knitr::kable(summary(imputed[,-1]))
+par(mfrow=c(3,2))
+hist(imputed$age, main = "Histogram of Age", xlab = "Age", freq = FALSE)
+hist(imputed$weight, main = "Histogram of Weight", xlab = "Weight", freq = FALSE)
+hist(imputed$height, main = "Histogram of Height", xlab = "Height", freq = FALSE)
+hist(imputed$ap_hi, main = "Histogram of Systolic BP", xlab = "Systolic BP", freq = FALSE)
+hist(imputed$ap_lo, main = "Histogram of Diastolic BP", xlab = "Diastolic BP", freq = FALSE)
+
 ```
+
 From the summary statistics of the imputed dataset, there are no longer any missing values.
 
 ```{r, include}
@@ -74,25 +90,11 @@ testData <- imputed[-indexTrain, ]
 trainData <- trainData[,-1]
 testData <- testData[-1]
 
-#checking for outliers 
-cooksd <- cooks.distance(glm(diabetes ~ ., 
-                             family = "binomial", 
-                             data = trainData))
-
-plot(cooksd, 
-     pch="*", 
-     cex=2, 
-     main="Influential Obs by Cooks distance")  
-abline(h = 4*mean(cooksd, na.rm=T), col="red")
-
-outliers <- as.data.frame(rownames(trainData[cooksd > 4*mean(cooksd, na.rm=T), ]))
-nrow(outliers)
-
 #Checking for multicolinearity (#bmi and weight are correlated)
 corrplot(cor(trainData[,c(1,3:6,13)]), method = "circle", type = "full")
 ```
 
-Lastly the data set was checked for outliers, as there were only found to be 37 outliers, it was not a significant number to be removed for analysis. In terms of checking for multicolineary, bmi and weight were highly positively correlated (0.8). Due to this reason I decided to remove the bmi variable from the predictor susbset (after testing models and seeing improvements in performance metrics with a smaller subset). 
+In terms of checking for multicolineary, bmi and weight were highly positively correlated (0.8). Due to this reason I decided to remove the bmi variable from the predictor susbset (after testing models and seeing improvements in performance metrics with a smaller subset). 
 
 ### Final Model Choice
 The classification model chosen that can accurately classify individuals as being risk for diabetes or not was a tested Gradient Boost Machines method. This machine learning method had the largest accuracy and AOC value. 
@@ -107,10 +109,12 @@ Gradient boosting trains models in a gradual, additive and sequential manner (in
 | MSE      | 0.2179              | 0.1764            | 0.1945        | 0.2725      | 0.2381        |
 | RMSE     | 0.4668              | 0.4199            | 0.4409        | 0.5221      | 0.4879        |
 | AUC      | 0.7115              | 0.8116            | 0.7858        | 0.6952      | 0.7822        |
-| Accuracy | 0.6069              | 0.7271            | 0.7068        | 0.6194      | 0.7104        |
+| Accuracy | 0.6069              | 0.7330            | 0.7068        | 0.6194      | 0.7104        |
+
 
 ### Key Factors for Model Predictions
 Advantages:
+
 * Generally more accurate compare to other modes,
 * Train faster especially on larger datasets,
 * Most of them provide support handling categorical features,
@@ -119,10 +123,14 @@ Advantages:
 
 ### Limitations of Model
 Disadvantages:
-* Prone to overfitting: this can be solved by applying L1 and L2 regularization penalties. You can try a low learning rate as well;
-* Models can be computationally expensive and take a long time to train, especially on CPUs;
+
+* Prone to overfitting, due to sensitivity to outliers.
+* Models can be computationally expensive and take a long time to train.
 * Difficult to interpret the final models.
 * It is difficult to scale this algorithm as every estimator is dependent on its predecessor.
 
 ### Further Steps
 
+If I had more time to work on the problem:
+* I would spend more time on pre-processing the data, including additional time on outlier analysis. There were numerous data entry errors that could be more thoroughly combed through.
+* I would test additional machine learning alogirthms such as K-Nearest neighbours, Linear Discriminant Analysis and Quadratic Discriminant Analysis. Possibly using principle component analysis to choose better subsets of variables. 

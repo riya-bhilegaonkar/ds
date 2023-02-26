@@ -5,7 +5,7 @@ navbar:
   right:
     - text: "Final Model"
       href: report.html
-    - text: "Tested Classification Models"
+    - text: "Code: Tested Classification Models"
       href: models.html
     - text: "Business Impact"
       href: impact.html
