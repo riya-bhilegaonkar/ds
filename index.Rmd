@@ -5,3 +5,11 @@ output:
     toc: true
     toc_float: true
 ---
+
+Diabetes is a prevalent condition among the active membership of many of Healthfirst’s health plans.
+Healthfirst seeks to improve member health outcomes, so it is important to generate predictions that
+drive actions to help prevent diabetes-related events such as:
+- Unplanned hospital visits
+- Increased risk of disease progression
+- Increased need for specialist care
+- Prescriptions for more expensive medication

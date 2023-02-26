@@ -376,6 +376,8 @@ div.tocify {
 </div>
 
 
+<p>The below is the code used to test the chosen classification
+model:</p>
 <pre class="r"><code>#Load Libraries
 library(chunked)</code></pre>
 <pre><code>## Loading required package: dplyr</code></pre>
@@ -816,14 +818,14 @@ localH2O &lt;- h2o.init(nthreads = -1)</code></pre>
 <pre><code>##  Connection successful!
 ## 
 ## R is connected to the H2O cluster: 
-##     H2O cluster uptime:         2 hours 43 minutes 
+##     H2O cluster uptime:         5 hours 12 minutes 
 ##     H2O cluster timezone:       America/New_York 
 ##     H2O data parsing timezone:  UTC 
 ##     H2O cluster version:        3.40.0.1 
 ##     H2O cluster version age:    17 days 
 ##     H2O cluster name:           H2O_started_from_R_Riya_Bhilegaonkar_goj840 
 ##     H2O cluster total nodes:    1 
-##     H2O cluster total memory:   1.88 GB 
+##     H2O cluster total memory:   1.85 GB 
 ##     H2O cluster total cores:    4 
 ##     H2O cluster allowed cores:  4 
 ##     H2O cluster healthy:        TRUE 
@@ -856,19 +858,19 @@ rforest.model &lt;- h2o.randomForest(y=y.dep, x=x.indep, training_frame = train.
   |                                                                            
   |                                                                      |   0%
   |                                                                            
-  |==                                                                    |   3%
+  |===                                                                   |   4%
   |                                                                            
-  |======                                                                |   9%
+  |=======                                                               |  10%
   |                                                                            
-  |=================                                                     |  24%
+  |==================                                                    |  25%
   |                                                                            
-  |=============================                                         |  41%
+  |==============================                                        |  42%
   |                                                                            
-  |=========================================                             |  58%
+  |==========================================                            |  61%
   |                                                                            
-  |======================================================                |  77%
+  |========================================================              |  80%
   |                                                                            
-  |====================================================================  |  97%
+  |======================================================================|  99%
   |                                                                            
   |======================================================================| 100%</code></pre>
 <pre class="r"><code>#Performance Metrics
@@ -925,9 +927,9 @@ logit.model &lt;- h2o.glm( x = x.indep,
   |                                                                            
   |                                                                      |   0%
   |                                                                            
-  |=======                                                               |  10%
+  |========                                                              |  12%
   |                                                                            
-  |====================                                                  |  28%
+  |=====================                                                 |  30%
   |                                                                            
   |======================================================================| 100%</code></pre>
 <pre><code>## Warning in doTryCatch(return(expr), name, parentenv, handler): Reached maximum
@@ -987,6 +989,17 @@ h2o.performance(logit.model, newdata = test.h2o)</code></pre>
 ## 18                     max tpr  0.164085    1.000000 398
 ## 
 ## Gains/Lift Table: Extract with `h2o.gainsLift(&lt;model&gt;, &lt;data&gt;)` or `h2o.gainsLift(&lt;model&gt;, valid=&lt;T/F&gt;, xval=&lt;T/F&gt;)`</code></pre>
+<pre class="r"><code>#Model Training with SVM
+letter_classifier &lt;- ksvm(diabetes ~ ., data = trainData,kernel = &quot;vanilladot&quot;)
+letter_classifier
+
+#predictions:
+letter_predictions &lt;- predict(letter_classifier, testData)
+
+#Check the accuracy:
+caret::confusionMatrix(letter_predictions,testData$diabetes)
+agreement &lt;- letter_predictions == testData$diabetes
+prop.table(table(agreement))</code></pre>
 <pre class="r"><code>#Model Training with Naive Bayes
 naive.h2o &lt;- h2o.naiveBayes(x = x.indep,
                           y = y.dep,
@@ -1095,6 +1108,84 @@ h2o.performance(tree.model, newdata = test.h2o)</code></pre>
 ## 18                     max tpr  0.462130    1.000000  30
 ## 
 ## Gains/Lift Table: Extract with `h2o.gainsLift(&lt;model&gt;, &lt;data&gt;)` or `h2o.gainsLift(&lt;model&gt;, valid=&lt;T/F&gt;, xval=&lt;T/F&gt;)`</code></pre>
+<pre class="r"><code># Build and train the model:
+pros_gbm = h2o.gbm(x = x.indep, 
+                     y = y.dep, 
+                        training_frame = train.h2o,
+                         nfolds = 5,
+                         keep_cross_validation_predictions = TRUE,
+                        seed = 4)</code></pre>
+<pre><code>## 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |=====                                                                 |   7%
+  |                                                                            
+  |=============                                                         |  19%
+  |                                                                            
+  |============================                                          |  40%
+  |                                                                            
+  |====================================                                  |  51%
+  |                                                                            
+  |==================================================                    |  72%
+  |                                                                            
+  |=========================================================             |  82%
+  |                                                                            
+  |=================================================================     |  93%
+  |                                                                            
+  |======================================================================| 100%</code></pre>
+<pre class="r"><code># Eval performance:
+perf &lt;- h2o.performance(pros_gbm)
+perf</code></pre>
+<pre><code>## H2OBinomialMetrics: gbm
+## ** Reported on training data. **
+## 
+## MSE:  0.1763657
+## RMSE:  0.4199592
+## LogLoss:  0.5304823
+## Mean Per-Class Error:  0.2729461
+## AUC:  0.8116454
+## AUCPR:  0.8058645
+## Gini:  0.6232908
+## R^2:  0.2945369
+## 
+## Confusion Matrix (vertical: actual; across: predicted) for F1-optimal threshold:
+##            0     1    Error          Rate
+## 0      18037  9980 0.356212   =9980/28017
+## 1       5308 22676 0.189680   =5308/27984
+## Totals 23345 32656 0.272995  =15288/56001
+## 
+## Maximum Metrics: Maximum metrics at their respective thresholds
+##                         metric threshold        value idx
+## 1                       max f1  0.376780     0.747889 241
+## 2                       max f2  0.179014     0.845538 345
+## 3                 max f0point5  0.608417     0.759837 143
+## 4                 max accuracy  0.514514     0.741451 180
+## 5                max precision  0.939092     1.000000   0
+## 6                   max recall  0.052791     1.000000 398
+## 7              max specificity  0.939092     1.000000   0
+## 8             max absolute_mcc  0.547694     0.485975 167
+## 9   max min_per_class_accuracy  0.462280     0.739587 203
+## 10 max mean_per_class_accuracy  0.514514     0.741418 180
+## 11                     max tns  0.939092 28017.000000   0
+## 12                     max fns  0.939092 27983.000000   0
+## 13                     max fps  0.047199 28017.000000 399
+## 14                     max tps  0.052791 27984.000000 398
+## 15                     max tnr  0.939092     1.000000   0
+## 16                     max fnr  0.939092     0.999964   0
+## 17                     max fpr  0.047199     1.000000 399
+## 18                     max tpr  0.052791     1.000000 398
+## 
+## Gains/Lift Table: Extract with `h2o.gainsLift(&lt;model&gt;, &lt;data&gt;)` or `h2o.gainsLift(&lt;model&gt;, valid=&lt;T/F&gt;, xval=&lt;T/F&gt;)`</code></pre>
+<pre class="r"><code># Generate predictions on a validation set (if necessary):
+pred &lt;- h2o.predict(pros_gbm, newdata = test.h2o)</code></pre>
+<pre><code>## 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</code></pre>
+<pre class="r"><code># Extract feature interactions:
+feature_interactions &lt;- h2o.feature_interaction(pros_gbm)</code></pre>
 
 
 
