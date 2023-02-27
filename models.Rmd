@@ -168,11 +168,11 @@ pros_gbm = h2o.gbm(x = x.indep,
 
 # Eval performance:
 perf <- h2o.performance(pros_gbm)
-perf
 
 # Generate predictions on a validation set (if necessary):
 pred <- h2o.predict(pros_gbm, newdata = test.h2o)
 
 # Extract feature interactions:
 feature_interactions <- h2o.feature_interaction(pros_gbm)
+pros_gbm
 ```
