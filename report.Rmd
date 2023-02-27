@@ -115,7 +115,9 @@ Gradient boosting trains models in a gradual, additive and sequential manner (in
 
 
 ### Key Factors for Model Predictions
+
 Model Summary: 
+
 | Parameter       | Value |
 |-----------------|-------|
 | Number of Trees | 50    |
