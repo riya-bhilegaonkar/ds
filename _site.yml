@@ -1,12 +1,14 @@
-name: "Healthfirst Technical Prompt"
+name: "Technical Portfolio"
 output_dir: "."
 navbar:
-  title: "Home"
+  title: "Project List"
   right:
-    - text: "Final Model"
+    - text: "Classification Model"
       href: report.html
     - text: "Code: Tested Classification Models"
       href: models.html
+    - text: "Program Evaluation"
+      href: program.html
     - icon: fa-github fa-lg
       href: http://github.com/riya-bhilegaonkar/
 output:

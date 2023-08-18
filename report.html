@@ -320,7 +320,7 @@ div.tocify {
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="index.html">Home</a>
+      <a class="navbar-brand" href="index.html">Project List</a>
     </div>
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
@@ -328,10 +328,13 @@ div.tocify {
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="report.html">Final Model</a>
+  <a href="report.html">Classification Model</a>
 </li>
 <li>
   <a href="models.html">Code: Tested Classification Models</a>
+</li>
+<li>
+  <a href="program.html">Program Evaluation</a>
 </li>
 <li>
   <a href="http://github.com/riya-bhilegaonkar/">
@@ -538,7 +541,7 @@ that were some missing values in the gluc variable and there were
 certain values coded with a 0. Additionally there were extremely high
 and low values for systolic and diastolic blood pressure, which I
 recoded as missing values. To combat the 0 values as it was not listed
-as a factor in the data dictionary, I recoded the 0 values form the gluc
+as a factor in the data dictionary, I recoded the 0 values from the gluc
 column to missing values.Then to fix the issue of missing values, I used
 the mice package to impute values with plausible data values drawn from
 distributions. This method was used as there were over 7000 missing
@@ -839,7 +842,7 @@ dependent on its predecessor.</li>
 </ul>
 <p>Solutions:</p>
 <ul>
-<li><p> Regularization techniques eliminate the deterioration and reduce
+<li><p>Regularization techniques eliminate the deterioration and reduce
 the overfitting effect. The number of gradient boosting iterations, M,
 is a well-known regularization parameter.</p></li>
 <li><p>In order to perform stoichastic gradient boosting, which is
@@ -850,13 +853,18 @@ iteration.</p></li>
 </div>
 <div id="further-steps" class="section level3">
 <h3>Further Steps</h3>
-<p>If I had more time to work on the problem: * I would spend more time
-on pre-processing the data, including additional time on outlier
-analysis. There were numerous data entry errors that could be more
-thoroughly combed through. * I would test additional machine learning
-algorithms such as K-Nearest neighbours, Linear Discriminant Analysis
-and Quadratic Discriminant Analysis. Possibly using principle component
-analysis to choose better subsets of variables.</p>
+<p>If I had more time to work on the problem:</p>
+<ul>
+<li>I would spend more time on pre-processing the data, including
+additional time on outlier analysis. There were numerous data entry
+errors that could be more thoroughly combed through.</li>
+<li>I would test additional machine learning algorithms such as
+K-Nearest neighbors, Linear Discriminant Analysis and Quadratic
+Discriminant Analysis. Possibly using principle component analysis to
+choose better subsets of variables.</li>
+<li>Optimize model for precision and recall to deal with class
+imbalance.</li>
+</ul>
 </div>
 <div id="business-impact" class="section level3">
 <h3>Business Impact</h3>
@@ -870,8 +878,8 @@ freeing insurance professionals to concentrate on procedures that will
 enhance the experience of policyholders. Patients, hospitals, doctors,
 and insurance companies will gain from the GBM model’s ability to
 complete tasks that are currently handled by people but are handled far
-more quickly and inexpensively by GBM. Ultimately it would be in
-Healthfirst’s interest to create a classification model that assesses
+more quickly and inexpensively by GBM. Ultimately it would be in the
+organization’s interest to create a classification model that assesses
 member diabetes risk status.</p>
 </div>
 </div>

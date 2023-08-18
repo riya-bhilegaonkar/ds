@@ -320,7 +320,7 @@ div.tocify {
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="index.html">Home</a>
+      <a class="navbar-brand" href="index.html">Project List</a>
     </div>
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
@@ -328,10 +328,13 @@ div.tocify {
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="report.html">Final Model</a>
+  <a href="report.html">Classification Model</a>
 </li>
 <li>
   <a href="models.html">Code: Tested Classification Models</a>
+</li>
+<li>
+  <a href="program.html">Program Evaluation</a>
 </li>
 <li>
   <a href="http://github.com/riya-bhilegaonkar/">
@@ -366,6 +369,7 @@ model:</p>
 <pre class="r"><code>#Load Libraries
 library(chunked)</code></pre>
 <pre><code>## Loading required package: dplyr</code></pre>
+<pre><code>## Warning: package &#39;dplyr&#39; was built under R version 4.2.3</code></pre>
 <pre><code>## 
 ## Attaching package: &#39;dplyr&#39;</code></pre>
 <pre><code>## The following objects are masked from &#39;package:stats&#39;:
@@ -375,16 +379,23 @@ library(chunked)</code></pre>
 ## 
 ##     intersect, setdiff, setequal, union</code></pre>
 <pre class="r"><code>library(tidyverse)</code></pre>
-<pre><code>## ── Attaching packages
-## ───────────────────────────────────────
-## tidyverse 1.3.2 ──</code></pre>
-<pre><code>## ✔ ggplot2 3.4.0     ✔ purrr   0.3.5
-## ✔ tibble  3.1.8     ✔ stringr 1.5.0
-## ✔ tidyr   1.2.1     ✔ forcats 0.5.2
-## ✔ readr   2.1.3     
-## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+<pre><code>## Warning: package &#39;tidyverse&#39; was built under R version 4.2.3</code></pre>
+<pre><code>## Warning: package &#39;ggplot2&#39; was built under R version 4.2.3</code></pre>
+<pre><code>## Warning: package &#39;tibble&#39; was built under R version 4.2.3</code></pre>
+<pre><code>## Warning: package &#39;tidyr&#39; was built under R version 4.2.3</code></pre>
+<pre><code>## Warning: package &#39;readr&#39; was built under R version 4.2.3</code></pre>
+<pre><code>## Warning: package &#39;purrr&#39; was built under R version 4.2.3</code></pre>
+<pre><code>## Warning: package &#39;forcats&#39; was built under R version 4.2.3</code></pre>
+<pre><code>## Warning: package &#39;lubridate&#39; was built under R version 4.2.3</code></pre>
+<pre><code>## ── Attaching core tidyverse packages ────────────── tidyverse 2.0.0 ──
+## ✔ forcats   1.0.0     ✔ readr     2.1.4
+## ✔ ggplot2   3.4.2     ✔ stringr   1.5.0
+## ✔ lubridate 1.9.2     ✔ tibble    3.2.1
+## ✔ purrr     1.0.1     ✔ tidyr     1.3.0</code></pre>
+<pre><code>## ── Conflicts ──────────────────────────────── tidyverse_conflicts() ──
 ## ✖ dplyr::filter() masks stats::filter()
-## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+## ✖ dplyr::lag()    masks stats::lag()
+## ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
 <pre class="r"><code>library(caret)</code></pre>
 <pre><code>## Loading required package: lattice
 ## 
@@ -404,6 +415,11 @@ library(doBy)</code></pre>
 <pre class="r"><code>library(data.table)</code></pre>
 <pre><code>## 
 ## Attaching package: &#39;data.table&#39;
+## 
+## The following objects are masked from &#39;package:lubridate&#39;:
+## 
+##     hour, isoweek, mday, minute, month, quarter, second, wday, week,
+##     yday, year
 ## 
 ## The following object is masked from &#39;package:purrr&#39;:
 ## 
@@ -433,6 +449,10 @@ library(doBy)</code></pre>
 ## The following objects are masked from &#39;package:data.table&#39;:
 ## 
 ##     hour, month, week, year
+## 
+## The following objects are masked from &#39;package:lubridate&#39;:
+## 
+##     day, hour, month, week, year
 ## 
 ## The following objects are masked from &#39;package:stats&#39;:
 ## 
@@ -545,17 +565,25 @@ corrplot(cor(trainData[,c(1,3:6,13)]), method = &quot;circle&quot;, type = &quot
 ## 0.756404</code></pre>
 <pre class="r"><code>#for h2o package
 localH2O &lt;- h2o.init(nthreads = -1)</code></pre>
-<pre><code>##  Connection successful!
+<pre><code>## 
+## H2O is not running yet, starting it now...
+## 
+## Note:  In case of errors look at the following log files:
+##     C:\Users\RIYABH~1\AppData\Local\Temp\Rtmpq2DTwe\file10d079cf5e1e/h2o_Riya_Bhilegaonkar_started_from_r.out
+##     C:\Users\RIYABH~1\AppData\Local\Temp\Rtmpq2DTwe\file10d04c0665cf/h2o_Riya_Bhilegaonkar_started_from_r.err
+## 
+## 
+## Starting H2O JVM and connecting:  Connection successful!
 ## 
 ## R is connected to the H2O cluster: 
-##     H2O cluster uptime:         1 days 8 hours 
+##     H2O cluster uptime:         5 seconds 391 milliseconds 
 ##     H2O cluster timezone:       America/New_York 
 ##     H2O data parsing timezone:  UTC 
 ##     H2O cluster version:        3.40.0.1 
-##     H2O cluster version age:    18 days 
-##     H2O cluster name:           H2O_started_from_R_Riya_Bhilegaonkar_goj840 
+##     H2O cluster version age:    6 months and 9 days 
+##     H2O cluster name:           H2O_started_from_R_Riya_Bhilegaonkar_wrk347 
 ##     H2O cluster total nodes:    1 
-##     H2O cluster total memory:   1.63 GB 
+##     H2O cluster total memory:   1.96 GB 
 ##     H2O cluster total cores:    4 
 ##     H2O cluster allowed cores:  4 
 ##     H2O cluster healthy:        TRUE 
@@ -564,6 +592,9 @@ localH2O &lt;- h2o.init(nthreads = -1)</code></pre>
 ##     H2O Connection proxy:       NA 
 ##     H2O Internal Security:      FALSE 
 ##     R Version:                  R version 4.2.2 (2022-10-31 ucrt)</code></pre>
+<pre><code>## Warning in h2o.clusterInfo(): 
+## Your H2O cluster version is (6 months and 9 days) old. There may be a newer version available.
+## Please download and install the latest version from: https://h2o-release.s3.amazonaws.com/h2o/latest_stable.html</code></pre>
 <pre class="r"><code>#data as h2o cluster
 train.h2o &lt;- as.h2o(trainData)</code></pre>
 <pre><code>## 
@@ -588,19 +619,19 @@ rforest.model &lt;- h2o.randomForest(y=y.dep, x=x.indep, training_frame = train.
   |                                                                            
   |                                                                      |   0%
   |                                                                            
-  |===                                                                   |   4%
+  |==                                                                    |   2%
   |                                                                            
   |=======                                                               |  10%
   |                                                                            
   |==================                                                    |  26%
   |                                                                            
-  |==============================                                        |  43%
+  |=============================                                         |  42%
   |                                                                            
-  |==========================================                            |  60%
+  |=========================================                             |  58%
   |                                                                            
-  |=======================================================               |  79%
+  |=====================================================                 |  76%
   |                                                                            
-  |====================================================================  |  97%
+  |============================================================          |  86%
   |                                                                            
   |======================================================================| 100%</code></pre>
 <pre class="r"><code>#Performance Metrics
@@ -657,9 +688,11 @@ logit.model &lt;- h2o.glm( x = x.indep,
   |                                                                            
   |                                                                      |   0%
   |                                                                            
-  |====================                                                  |  29%
+  |==                                                                    |   3%
   |                                                                            
-  |========================================                              |  58%
+  |==============================                                        |  43%
+  |                                                                            
+  |=========================================                             |  58%
   |                                                                            
   |======================================================================| 100%</code></pre>
 <pre><code>## Warning in doTryCatch(return(expr), name, parentenv, handler): Reached maximum
@@ -738,6 +771,8 @@ naive.h2o &lt;- h2o.naiveBayes(x = x.indep,
 <pre><code>## 
   |                                                                            
   |                                                                      |   0%
+  |                                                                            
+  |====================================================================  |  97%
   |                                                                            
   |======================================================================| 100%</code></pre>
 <pre class="r"><code>#Performance Metrics
@@ -845,13 +880,17 @@ pros_gbm = h2o.gbm(x = x.indep,
   |                                                                            
   |                                                                      |   0%
   |                                                                            
-  |===========                                                           |  16%
+  |===                                                                   |   5%
   |                                                                            
-  |==================================================                    |  71%
+  |=================================                                     |  47%
   |                                                                            
-  |=========================================================             |  81%
+  |=================================================                     |  71%
   |                                                                            
-  |================================================================      |  92%
+  |=======================================================               |  78%
+  |                                                                            
+  |==========================================================            |  83%
+  |                                                                            
+  |===================================================================== |  99%
   |                                                                            
   |======================================================================| 100%</code></pre>
 <pre class="r"><code># Eval performance:
@@ -871,7 +910,7 @@ pros_gbm</code></pre>
 ## ==============
 ## 
 ## H2OBinomialModel: gbm
-## Model ID:  GBM_model_R_1677358306266_4069 
+## Model ID:  GBM_model_R_1692324126986_88 
 ## Model Summary: 
 ##   number_of_trees number_of_internal_trees model_size_in_bytes min_depth
 ## 1              50                       50               21837         5
