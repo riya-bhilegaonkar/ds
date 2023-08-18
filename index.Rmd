@@ -17,7 +17,7 @@ drive actions to help prevent diabetes-related events such as:
 - Increased need for specialist care
 - Prescriptions for more expensive medication
 
-* Program Evaluation: Effect of Care Management on 30 Day Pediatric Readmissions Rate
-Care Management plans can be implemented to reduce readmissions rates, preventing repeat hospitalizations and incurring costs. Lower readmissions rate contribute can improve HEDIS measures, leader to better health plan ratings
+* Program Evaluation: Effect of Care Management on 30 Day Pediatric Readmission Rate
+Care Management plans can be implemented to reduce readmission rates, preventing repeat hospitalizations and incurring costs. Lower readmission rate contribute can improve HEDIS measures, leader to better health plan ratings
 
 Data Science Methods Used: The program evaluation for the study population is done through a casual inference modeling framework. Upon compiling data on the study population, propensity score matching is to be used to create a matched dataset with an artificial control group. Using the matched dataset survival analysis is performed by fitting cox proportional hazard models to determine hazard ratios for our outcome and additional factors, survival curves were fit to display proportion of patients without a readmission. 
