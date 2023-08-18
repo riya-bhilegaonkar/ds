@@ -1,15 +1,23 @@
 ---
-title: "Technical Prompt Solution"
+title: "Technical Portfolio"
 output: 
   html_document:
     toc: true
     toc_float: true
 ---
 
-Diabetes is a prevalent condition among the active membership of many of Healthfirst’s health plans.
-Healthfirst seeks to improve member health outcomes, so it is important to generate predictions that
+Projects:
+
+* Classification Model to Predict Diabetes Risk
+Diabetes is a prevalent condition among the active membership of many of an organization's health plans.
+Seeking to improve member health outcomes,it is important to generate predictions that
 drive actions to help prevent diabetes-related events such as:
 - Unplanned hospital visits
 - Increased risk of disease progression
 - Increased need for specialist care
 - Prescriptions for more expensive medication
+
+* Program Evaluation: Effect of Care Management on 30 Day Pediatric Readmissions Rate
+Care Management plans can be implemented to reduce readmissions rates, preventing repeat hospitalizations and incurring costs. Lower readmissions rate contribute can improve HEDIS measures, leader to better health plan ratings
+
+Data Science Methods Used: The program evaluation for the study population is done through a casual inference modeling framework. Upon compiling data on the study population, propensity score matching is to be used to create a matched dataset with an artificial control group. Using the matched dataset survival analysis is performed by fitting cox proportional hazard models to determine hazard ratios for our outcome and additional factors, survival curves were fit to display proportion of patients without a readmission. 

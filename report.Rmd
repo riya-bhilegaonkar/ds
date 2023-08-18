@@ -56,7 +56,7 @@ hist(diabetes_risk$ap_lo, main = "Histogram of Diastolic BP", xlab = "Diastolic 
 diabetes_risk <- diabetes_risk %>% mutate(ap_hi = replace(ap_hi, ap_hi>360, NA), ap_lo = replace(ap_lo, ap_lo>360, NA), ap_hi = replace(ap_hi, ap_hi<0, NA), ap_lo = replace(ap_lo, ap_lo<0, NA))
 ```
 
-Upon viewing additional summary statistics I noticed more problems that were some missing values in the gluc variable and there were certain values coded with a 0. Additionally there were extremely high and low values for systolic and diastolic blood pressure, which I recoded as missing values. To combat the 0 values as it was not listed as a factor in the data dictionary, I recoded the 0 values form the gluc column to missing values.Then to fix the issue of missing values, I used the mice package to impute values with plausible data values drawn from distributions. This method was used as there were over 7000 missing values which is a large amount (these would be outlier values).
+Upon viewing additional summary statistics I noticed more problems that were some missing values in the gluc variable and there were certain values coded with a 0. Additionally there were extremely high and low values for systolic and diastolic blood pressure, which I recoded as missing values. To combat the 0 values as it was not listed as a factor in the data dictionary, I recoded the 0 values from the gluc column to missing values.Then to fix the issue of missing values, I used the mice package to impute values with plausible data values drawn from distributions. This method was used as there were over 7000 missing values which is a large amount (these would be outlier values).
 
 ```{r, include = FALSE}
 # Define arbitrary matrix with TRUE values when data is missing and FALSE otherwise
@@ -146,16 +146,18 @@ Disadvantages:
 
 Solutions:
 
-*  Regularization techniques eliminate the deterioration and reduce the overfitting effect. The number of gradient boosting iterations, M, is a well-known regularization parameter.
+*  Regularization techniques eliminate the deterioration and reduce the overfitting effect. The number of gradient boosting iterations, M, is a well-known regularization parameter.
 
 * In order to perform stoichastic gradient boosting, which is faster, a subsample of the training data is randomly selected (without replacement) from the entire training dataset for each iteration.
 
 ### Further Steps
 
 If I had more time to work on the problem:
+
 * I would spend more time on pre-processing the data, including additional time on outlier analysis. There were numerous data entry errors that could be more thoroughly combed through.
-* I would test additional machine learning algorithms such as K-Nearest neighbours, Linear Discriminant Analysis and Quadratic Discriminant Analysis. Possibly using principle component analysis to choose better subsets of variables. 
+* I would test additional machine learning algorithms such as K-Nearest neighbors, Linear Discriminant Analysis and Quadratic Discriminant Analysis. Possibly using principle component analysis to choose better subsets of variables. 
+* Optimize model for precision and recall to deal with class imbalance.
 
 ### Business Impact
 
-A GBM model could help assist in detecting members with high risk for diabetes and inherently lead to better predictions of unplanned hospital visits, increased risk of disease progression, increased need for specialist care and prescriptions for more expensive medication. Machine learning's effects on health insurance will enable both policyholders and insurers to save time and money. AI will undertake tedious tasks, freeing insurance professionals to concentrate on procedures that will enhance the experience of policyholders. Patients, hospitals, doctors, and insurance companies will gain from the GBM model's ability to complete tasks that are currently handled by people but are handled far more quickly and inexpensively by GBM. Ultimately it would be in Healthfirst's interest to create a classification model that assesses member diabetes risk status.
+A GBM model could help assist in detecting members with high risk for diabetes and inherently lead to better predictions of unplanned hospital visits, increased risk of disease progression, increased need for specialist care and prescriptions for more expensive medication. Machine learning's effects on health insurance will enable both policyholders and insurers to save time and money. AI will undertake tedious tasks, freeing insurance professionals to concentrate on procedures that will enhance the experience of policyholders. Patients, hospitals, doctors, and insurance companies will gain from the GBM model's ability to complete tasks that are currently handled by people but are handled far more quickly and inexpensively by GBM. Ultimately it would be in the organization's interest to create a classification model that assesses member diabetes risk status.
